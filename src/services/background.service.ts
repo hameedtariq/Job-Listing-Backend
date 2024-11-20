@@ -5,9 +5,7 @@ import Job from '../types/job.type';
 import { Heap } from 'heap-js';
 
 // Note: It would be better to use a job queue system like Bull or Agenda for this kind of background processing
-// but for the sake of simplicity, we are using a cron job here
-// Also, this implementation is not efficient as it reads the jobs from the file system on every cron job run
-// A better approach would be to use a database to store the jobs and update their status
+// but for the sake of simplicity, we are using a priority queue implemented with a binary heap
 
 const jobComparator = (a: Job, b: Job) => {
   if (a.resolutionTime && b.resolutionTime) {
@@ -24,44 +22,52 @@ class BackgroundService {
   }
 
   static async processJob() {
-    const job = this.jobQueue.peek();
+    try {
+      const job = this.jobQueue.peek();
 
-    if (!job) {
-      return;
+      if (!job) {
+        return;
+      }
+
+      if (job.resolutionTime && job.resolutionTime > Date.now()) {
+        return;
+      }
+
+      const url = await UnsplashService.getRandomFoodPhoto();
+
+      if (!url) {
+        console.log('Error fetching image');
+        return;
+      }
+      job.result = url;
+      job.status = JobStatus.RESOLVED;
+      delete job.resolutionTime;
+
+      await FileService.updateOne(job);
+
+      this.jobQueue.pop(); // Remove the processed job
+
+      console.log(`Job ${job.id} processed`);
+    } catch (error) {
+      console.error('Error processing job:', error);
     }
-
-    if (job.resolutionTime && job.resolutionTime > Date.now()) {
-      return;
-    }
-
-    const url = await UnsplashService.getRandomFoodPhoto();
-
-    if (!url) {
-      console.log('Error fetching image');
-      return;
-    }
-    job.result = url;
-    job.status = JobStatus.RESOLVED;
-    delete job.resolutionTime;
-
-    await FileService.updateOne(job);
-
-    this.jobQueue.pop(); // Remove the processed job
-
-    console.log(`Job ${job.id} processed`);
   }
 
   static async startCronJob() {
-    // Load pending jobs from the file system
-    const jobs = await FileService.read();
-    jobs.forEach((job) => {
-      if (job.status === JobStatus.PENDING) {
-        this.jobQueue.push(job);
-      }
-    });
-    setInterval(async () => {
-      await this.processJob();
-    }, 5000); // Check every 5 seconds
+    try {
+      // Load pending jobs from the file system
+      const jobs = await FileService.read();
+      jobs.forEach((job) => {
+        if (job.status === JobStatus.PENDING) {
+          this.jobQueue.push(job);
+        }
+      });
+      setInterval(async () => {
+        await this.processJob();
+      }, 5000); // Check every 5 seconds
+    } catch (error) {
+      console.error('Error starting cron job:', error);
+    }
   }
 }
 
