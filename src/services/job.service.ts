@@ -29,7 +29,6 @@ class JobService {
     const randomSteps = Math.floor(
       Math.random() * ((maxDelayMs - minDelayMs) / stepSize + 1)
     ); // steps to maxDelayMs
-    return 1000; // TODO: remove this line
     return minDelayMs + randomSteps * stepSize;
   }
 }
