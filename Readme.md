@@ -46,3 +46,13 @@ Run the following command to start the development server:
 ```bash
 npm run dev
 ```
+
+---
+
+## **Time Report**
+
+- Project Setup and basic API creation: 1hrs
+- Unsplash API setup and reading docs: 1hr
+- Setting up Background Service: 2hrs
+- Fixes and error handling: 1hr
+- Total: 5hrs
