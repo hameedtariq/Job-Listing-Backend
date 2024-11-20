@@ -4,7 +4,7 @@ type Job = {
   id: string;
   status: JobStatus;
   result?: string;
-  executionTime?: number;
+  resolutionTime?: number;
 };
 
 export default Job;

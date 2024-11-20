@@ -16,7 +16,7 @@ class JobService {
 
   static async createJob(job: Job): Promise<void> {
     const jobs: Job[] = await FileService.read();
-    job.executionTime = Date.now() + this.getRandomDelay(); // simulate async job
+    job.resolutionTime = Date.now() + this.getRandomDelay(); // simulate async job
     jobs.push(job);
     await FileService.save(jobs);
     BackgroundService.addJob(job);
@@ -29,7 +29,7 @@ class JobService {
     const randomSteps = Math.floor(
       Math.random() * ((maxDelayMs - minDelayMs) / stepSize + 1)
     ); // steps to maxDelayMs
-
+    return 1000; // TODO: remove this line
     return minDelayMs + randomSteps * stepSize;
   }
 }
