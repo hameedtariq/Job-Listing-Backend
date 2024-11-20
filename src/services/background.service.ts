@@ -10,8 +10,8 @@ import { Heap } from 'heap-js';
 // A better approach would be to use a database to store the jobs and update their status
 
 const jobComparator = (a: Job, b: Job) => {
-  if (a.executionTime && b.executionTime) {
-    return a.executionTime - b.executionTime;
+  if (a.resolutionTime && b.resolutionTime) {
+    return a.resolutionTime - b.resolutionTime;
   }
   return 0;
 };
@@ -30,7 +30,7 @@ class BackgroundService {
       return;
     }
 
-    if (job.executionTime && job.executionTime > Date.now()) {
+    if (job.resolutionTime && job.resolutionTime > Date.now()) {
       return;
     }
 
@@ -42,6 +42,7 @@ class BackgroundService {
     }
     job.result = url;
     job.status = JobStatus.RESOLVED;
+    delete job.resolutionTime;
 
     await FileService.updateOne(job);
 
